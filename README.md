@@ -37,13 +37,13 @@ SauceDemo-Playwright-Automation/
 ### Install dependencies
 ```bash
 npm install
-
+```
 Run all tests
-
+```bash
 npx playwright test
-
+```
 View HTML report
-
+```bash
 npx playwright show-report
 ```
 ⸻
