@@ -1,30 +1,52 @@
 import { Page, Locator } from '@playwright/test';
 
 export class ProductsPage {
-  private readonly page: Page;
-  private readonly cartBadge: Locator;
-  private readonly cartLink: Locator;
+  private page: Page;
+  private productSortDropdown: Locator;
+  private shoppingCartLink: Locator;
+  private shoppingCartBadge: Locator;
+  private logoutSidebarLink: Locator;
+  private menuButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.cartBadge = page.locator('[data-test="shopping-cart-badge"]');
-    this.cartLink = page.locator('[data-test="shopping-cart-link"]');
+    this.productSortDropdown = page.locator('[data-test="product-sort-container"]');
+    this.shoppingCartLink = page.locator('[data-test="shopping-cart-link"]');
+    this.shoppingCartBadge = page.locator('[data-test="shopping-cart-badge"]');
+    this.menuButton = page.locator('#react-burger-menu-btn');
+    this.logoutSidebarLink = page.locator('[data-test="logout-sidebar-link"]');
+  }
+  async getAllProductPrices() {
+    const pricesText = await this.page.locator('[data-test="inventory-item-price"]').allTextContents();
+    return pricesText.map(price => parseFloat(price.replace('$', '')));
+  }
+  async getProductPriceByName(productName: string) {
+    const product = this.page.locator('.inventory_item').filter({
+      hasText: productName
+    });
+  
+    const priceText = await product.locator('.inventory_item_price').textContent();
+  
+    return Number(priceText?.replace('$', ''));
+  }
+  async getCartBadgeCount() {
+    return await this.shoppingCartBadge.textContent();
+  }
+  
+  async selectSortOption(option: string) {
+    await this.productSortDropdown.selectOption(option);
+  }
+  async addItemToCart(itemName: string) {
+    const itemContainer = this.page.locator('[data-test="inventory-item"]', { hasText: itemName });
+    await itemContainer.locator('button').click();
+  }
+  async navigateToCart() {
+    await this.shoppingCartLink.click();
   }
 
-  async addProductToCart(productName: string) {
-    // Converts "Sauce Labs Backpack" to "sauce-labs-backpack" matching the real page IDs
-    const formattedName = productName.toLowerCase().replace(/ /g, '-');
-    await this.page.locator(`[data-test="add-to-cart-${formattedName}"]`).click();
-  }
-
-  async getCartCount(): Promise<string | null> {
-    if (await this.cartBadge.isVisible()) {
-      return await this.cartBadge.textContent();
-    }
-    return '0';
-  }
-
-  async goToCart() {
-    await this.cartLink.click();
+  async logout() {
+    await this.menuButton.click();
+    await this.logoutSidebarLink.waitFor({ state: 'visible' });
+    await this.logoutSidebarLink.click();
   }
 }

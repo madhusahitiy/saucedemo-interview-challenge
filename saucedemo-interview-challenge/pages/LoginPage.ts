@@ -15,12 +15,16 @@ export class LoginPage {
   }
 
   async navigate() {
-    await this.page.goto('/');
+    await this.page.goto('https://www.saucedemo.com/');
   }
 
   async login(username: string, password: string) {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
+  }
+  // Grabs the error container text context when logins fail or inputs are missing
+  async getErrorMessage() {
+    return await this.page.locator('[data-test="error"]').textContent();
   }
 }

@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { ProductsPage } from '../pages/ProductsPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
-import testData from '../test-data/users.json';
+import data from '../test-data/users.json';
 
-test.describe('Sauce Labs Shop Core Journeys', () => {
+test.describe('SauceDemo E2E Flow', () => {
   let loginPage: LoginPage;
   let productsPage: ProductsPage;
   let checkoutPage: CheckoutPage;
@@ -15,32 +15,41 @@ test.describe('Sauce Labs Shop Core Journeys', () => {
     checkoutPage = new CheckoutPage(page);
 
     await loginPage.navigate();
-    await loginPage.login(testData.validUser.username, testData.validUser.password);
-  });
+    // login as standard_user
+    await loginPage.login(data.standard_user.username,data.standard_user.password); 
 
-  test('TC1 - Standard user is able to login successfully', async ({ page }) => {
     await expect(page).toHaveURL(/inventory.html/);
   });
 
-  test('TC2 - User can add a product to the cart', async () => {
-    await productsPage.addProductToCart('Sauce Labs Backpack');
-    const cartCount = await productsPage.getCartCount();
-    expect(cartCount).toBe('1');
-  });
+  test('user can complete purchase from login to confirmation', async ({ page }) => {
+    const items = [
+      data.available_products[0],
+      data.available_products[1]
+    ];
+    //add items to cart
+    for (const item of items) {
+      await productsPage.addItemToCart(item);
+    }
+    await productsPage.navigateToCart();
+    await checkoutPage.proceedToCheckout();
 
-  test('TC3 - User can successfully complete the checkout journey', async () => {
-    await productsPage.addProductToCart('Sauce Labs Backpack');
-    await productsPage.goToCart();
-    
-    await checkoutPage.startCheckout();
-    await checkoutPage.fillInformation(
-      testData.checkoutInfo.firstName,
-      testData.checkoutInfo.lastName,
-      testData.checkoutInfo.zipCode
+    await checkoutPage.fillCustomerInformation(
+      data.checkoutInfo.firstName,
+      data.checkoutInfo.lastName,
+      data.checkoutInfo.zipCode
     );
-    await checkoutPage.finishOrder();
 
-    const successHeader = checkoutPage.getSuccessMessageLocator();
-    await expect(successHeader).toHaveText('Thank you for your order!');
+    await checkoutPage.continueCheckout();
+    await checkoutPage.finishCheckout();
+
+    const confirmation = await checkoutPage.getConfirmationHeader();
+    //validating purchase
+    await expect(confirmation).toContainText('Thank you for your order!');
+
+    await productsPage.logout();
+
+    //validating logout and entiering login page again
+    await expect(page).toHaveURL(/saucedemo\.com\/?$/);
+    await expect(page.locator('[data-test="login-button"]')).toBeVisible();
   });
 });
