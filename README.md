@@ -1,7 +1,3 @@
-Here’s a clean, interview-ready README — short, structured, and not overloaded.
-
-⸻
-
 # 🧪 Playwright Automation Suite – SauceDemo
 This project is an end-to-end automation suite built using **Playwright + TypeScript** for testing the SauceDemo application.
 ## 📌 Application Under Test
